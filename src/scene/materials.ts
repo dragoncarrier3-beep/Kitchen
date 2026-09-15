@@ -12,28 +12,35 @@ const shared: {
 }
 
 function buildFinishMaterial(finish: MaterialFinish | FrameFinish, repeat: [number, number]): THREE.MeshStandardMaterial {
-  const key = materialKeyFromKind(finish.textureKind, finish.id, finish.sku, finish.name)
-  const bundle = getTextureBundle(key)
-  const map = bundle.map.clone()
-  const roughnessMap = bundle.roughnessMap.clone()
-  const normalMap = bundle.normalMap.clone()
-  map.repeat.set(repeat[0], repeat[1])
-  roughnessMap.repeat.set(repeat[0], repeat[1])
-  normalMap.repeat.set(repeat[0], repeat[1])
-  map.needsUpdate = true
-  roughnessMap.needsUpdate = true
-  normalMap.needsUpdate = true
-
-  return new THREE.MeshStandardMaterial({
-    color: finish.textureKind === 'paint' ? new THREE.Color(finish.baseColor) : new THREE.Color('#ffffff'),
-    map,
-    roughnessMap,
-    normalMap,
-    metalness: finish.metalness,
-    roughness: finish.roughness,
-    envMapIntensity: 1.05,
-    normalScale: new THREE.Vector2(0.55, 0.55),
-  })
+  try {
+    const key = materialKeyFromKind(finish.textureKind, finish.id, finish.sku, finish.name)
+    const bundle = getTextureBundle(key)
+    const map = bundle.map.clone()
+    const roughnessMap = bundle.roughnessMap.clone()
+    const normalMap = bundle.normalMap.clone()
+    map.repeat.set(repeat[0], repeat[1])
+    roughnessMap.repeat.set(repeat[0], repeat[1])
+    normalMap.repeat.set(repeat[0], repeat[1])
+    map.needsUpdate = true
+    roughnessMap.needsUpdate = true
+    normalMap.needsUpdate = true
+    return new THREE.MeshStandardMaterial({
+      color: finish.textureKind === 'paint' ? new THREE.Color(finish.baseColor) : new THREE.Color('#ffffff'),
+      map,
+      roughnessMap,
+      normalMap,
+      metalness: finish.metalness,
+      roughness: finish.roughness,
+      envMapIntensity: 1.05,
+      normalScale: new THREE.Vector2(0.55, 0.55),
+    })
+  } catch {
+    return new THREE.MeshStandardMaterial({
+      color: finish.baseColor,
+      metalness: finish.metalness,
+      roughness: finish.roughness,
+    })
+  }
 }
 
 export function useDoorMaterial(finish: MaterialFinish): THREE.MeshStandardMaterial {
@@ -62,22 +69,30 @@ export function useStaticMaterial(
   opts?: { roughness?: number; metalness?: number; repeat?: [number, number] },
 ): THREE.MeshStandardMaterial {
   return useMemo(() => {
-    const bundle = getTextureBundle(key)
-    const map = bundle.map.clone()
-    const roughnessMap = bundle.roughnessMap.clone()
-    const normalMap = bundle.normalMap.clone()
-    const repeat = opts?.repeat ?? [2, 2]
-    map.repeat.set(repeat[0], repeat[1])
-    roughnessMap.repeat.set(repeat[0], repeat[1])
-    normalMap.repeat.set(repeat[0], repeat[1])
-    return new THREE.MeshStandardMaterial({
-      color,
-      map,
-      roughnessMap,
-      normalMap,
-      roughness: opts?.roughness ?? 0.7,
-      metalness: opts?.metalness ?? 0.04,
-      envMapIntensity: 0.85,
-    })
+    try {
+      const bundle = getTextureBundle(key)
+      const map = bundle.map.clone()
+      const roughnessMap = bundle.roughnessMap.clone()
+      const normalMap = bundle.normalMap.clone()
+      const repeat = opts?.repeat ?? [2, 2]
+      map.repeat.set(repeat[0], repeat[1])
+      roughnessMap.repeat.set(repeat[0], repeat[1])
+      normalMap.repeat.set(repeat[0], repeat[1])
+      return new THREE.MeshStandardMaterial({
+        color,
+        map,
+        roughnessMap,
+        normalMap,
+        roughness: opts?.roughness ?? 0.7,
+        metalness: opts?.metalness ?? 0.04,
+        envMapIntensity: 0.85,
+      })
+    } catch {
+      return new THREE.MeshStandardMaterial({
+        color,
+        roughness: opts?.roughness ?? 0.7,
+        metalness: opts?.metalness ?? 0.04,
+      })
+    }
   }, [key, color, opts?.roughness, opts?.metalness, opts?.repeat?.[0], opts?.repeat?.[1]])
 }

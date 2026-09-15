@@ -24,20 +24,28 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) setReady(true)
+    }, 4000)
+
     initTextureLibrary((value) => {
       if (!cancelled) setProgress(value)
     })
       .then(() => {
         if (cancelled) return
-        const materials = MATERIALS.map((item) => ({
-          ...item,
-          thumbnail: getThumbnail(materialKeyFromKind(item.textureKind, item.id, item.sku, item.name)),
-        }))
-        const frames = FRAME_FINISHES.map((item) => ({
-          ...item,
-          thumbnail: getThumbnail(materialKeyFromKind(item.textureKind, item.id, item.sku, item.name)),
-        }))
-        hydrateCatalog({ materials, frames })
+        try {
+          const materials = MATERIALS.map((item) => ({
+            ...item,
+            thumbnail: getThumbnail(materialKeyFromKind(item.textureKind, item.id, item.sku, item.name)),
+          }))
+          const frames = FRAME_FINISHES.map((item) => ({
+            ...item,
+            thumbnail: getThumbnail(materialKeyFromKind(item.textureKind, item.id, item.sku, item.name)),
+          }))
+          hydrateCatalog({ materials, frames })
+        } catch {
+          /* seeded catalog already in the store */
+        }
         setReady(true)
       })
       .catch(() => {
@@ -45,42 +53,33 @@ export default function App() {
       })
     return () => {
       cancelled = true
+      window.clearTimeout(timeout)
     }
   }, [hydrateCatalog])
 
   const requestReset = () => {
     if (hasChanges()) setResetOpen(true)
-    else {
-      reset()
-    }
+    else reset()
   }
 
   if (!ready) return <LoadingScreen progress={progress} />
 
   return (
-    <div className="h-dvh overflow-hidden bg-[#0c0c0d] text-[#f4efe6]">
-      <div className="hidden h-full lg:grid lg:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="flex h-dvh flex-col overflow-hidden bg-[#0c0c0d] text-[#f4efe6] lg:grid lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className={`${sheetOpen ? 'h-[40%]' : 'h-[56%]'} min-h-[260px] lg:h-full`}>
         <Viewport webgl={webgl} />
-        <ConfigPanel onReset={requestReset} onErp={() => setErpOpen(true)} onSpec={() => setSpecOpen(true)} />
       </div>
-
-      <div className="flex h-full flex-col lg:hidden">
-        <div className={`${sheetOpen ? 'h-[42%]' : 'h-[58%]'} min-h-[240px]`}>
-          <Viewport webgl={webgl} />
-        </div>
-        <div className="relative min-h-0 flex-1 border-t border-white/10">
-          <button
-            type="button"
-            className="absolute left-1/2 top-2 z-10 h-1.5 w-12 -translate-x-1/2 rounded-full bg-white/25 md:hidden"
-            aria-label="Toggle configuration panel"
-            onClick={() => setSheetOpen((value) => !value)}
-          />
-          <div className="h-full overflow-hidden pt-4">
-            <ConfigPanel onReset={requestReset} onErp={() => setErpOpen(true)} onSpec={() => setSpecOpen(true)} />
-          </div>
+      <div className="relative min-h-0 flex-1 border-t border-white/10 lg:border-l lg:border-t-0">
+        <button
+          type="button"
+          className="absolute left-1/2 top-2 z-10 h-1.5 w-12 -translate-x-1/2 rounded-full bg-white/25 lg:hidden"
+          aria-label="Toggle configuration panel"
+          onClick={() => setSheetOpen((value) => !value)}
+        />
+        <div className="h-full overflow-hidden pt-3 lg:pt-0">
+          <ConfigPanel onReset={requestReset} onErp={() => setErpOpen(true)} onSpec={() => setSpecOpen(true)} />
         </div>
       </div>
-
       <ERPPayloadModal open={erpOpen} onClose={() => setErpOpen(false)} />
       <SpecSheet open={specOpen} onClose={() => setSpecOpen(false)} />
       <ResetDialog

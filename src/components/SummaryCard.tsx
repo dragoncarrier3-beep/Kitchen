@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from 'framer-motion'
 import { formatCurrency, formatDimensions, stockLabel } from '../lib/format'
 import {
   buildConfigurationPayload,
@@ -31,17 +30,7 @@ export function SummaryCard() {
       </dl>
       <div className="mt-4 flex items-end justify-between border-t border-white/10 pt-3">
         <span className="text-xs tracking-widest text-[#9a9388] uppercase">Estimated Price</span>
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={quote.total}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            className="font-display text-3xl text-[#f4efe6]"
-          >
-            {formatCurrency(quote.total)}
-          </motion.span>
-        </AnimatePresence>
+        <span className="font-display text-3xl text-[#f4efe6]">{formatCurrency(quote.total)}</span>
       </div>
     </section>
   )

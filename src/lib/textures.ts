@@ -67,10 +67,22 @@ function makeCanvas(size: number): { canvas: HTMLCanvasElement; ctx: CanvasRende
   const canvas = document.createElement('canvas')
   canvas.width = size
   canvas.height = size
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  const ctx = canvas.getContext('2d', { willReadFrequently: true }) ?? canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas 2D is unavailable')
   const data = ctx.createImageData(size, size)
   return { canvas, ctx, data }
+}
+
+function solidCanvas(size: number, rgb: [number, number, number]): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+  if (ctx) {
+    ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
+    ctx.fillRect(0, 0, size, size)
+  }
+  return canvas
 }
 
 function toTexture(canvas: HTMLCanvasElement, srgb: boolean): THREE.CanvasTexture {
@@ -209,13 +221,23 @@ let initPromise: Promise<void> | null = null
 
 function safeFallback(): TextureBundle {
   if (fallback) return fallback
-  const painted = paintSolid(64, PAINT.stucco)
-  fallback = bundleFromMaps(painted.color, painted.rough, painted.height)
+  try {
+    const painted = paintSolid(64, PAINT.stucco)
+    fallback = bundleFromMaps(painted.color, painted.rough, painted.height)
+  } catch {
+    const canvas = solidCanvas(8, [180, 170, 158])
+    fallback = {
+      map: toTexture(canvas, true),
+      roughnessMap: toTexture(canvas, false),
+      normalMap: toTexture(solidCanvas(8, [128, 128, 255]), false),
+      thumbnail: canvas.toDataURL('image/png'),
+    }
+  }
   return fallback
 }
 
 export async function initTextureLibrary(onProgress?: (value: number) => void): Promise<void> {
-  if (library) {
+  if (library && Object.keys(library).length > 0) {
     onProgress?.(1)
     return
   }
@@ -265,17 +287,18 @@ export async function initTextureLibrary(onProgress?: (value: number) => void): 
     }],
   ]
 
-    library = {}
+    const maps: Record<string, TextureBundle> = {}
     for (let i = 0; i < jobs.length; i += 1) {
       const [key, job] = jobs[i]
       try {
-        library[key] = job()
+        maps[key] = job()
       } catch {
-        library[key] = safeFallback()
+        maps[key] = safeFallback()
       }
       onProgress?.((i + 1) / jobs.length)
       await new Promise((resolve) => setTimeout(resolve, 0))
     }
+    library = maps
   })()
 
   await initPromise
@@ -316,4 +339,35 @@ export function disposeTextureLibrary(): void {
     bundle.normalMap.dispose()
   }
   library = null
+}
+
+let studioEnv: THREE.CubeTexture | null = null
+
+export function getStudioEnvironment(): THREE.CubeTexture {
+  if (studioEnv) return studioEnv
+  const face = (top: string, bottom: string) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 64
+    canvas.height = 64
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      const g = ctx.createLinearGradient(0, 0, 0, 64)
+      g.addColorStop(0, top)
+      g.addColorStop(1, bottom)
+      ctx.fillStyle = g
+      ctx.fillRect(0, 0, 64, 64)
+    }
+    return canvas
+  }
+  studioEnv = new THREE.CubeTexture([
+    face('#e7edf3', '#c5ccd4'),
+    face('#e4eaef', '#c2c9d1'),
+    face('#f4f0e8', '#dce3ea'),
+    face('#8d8578', '#5f584f'),
+    face('#d8e0e8', '#b7c0c9'),
+    face('#cfd6de', '#aeb6bf'),
+  ])
+  studioEnv.colorSpace = THREE.SRGBColorSpace
+  studioEnv.needsUpdate = true
+  return studioEnv
 }

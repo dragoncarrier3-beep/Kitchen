@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { CameraPreset } from '../adapters/types'
 import { formatDimensions } from '../lib/format'
-import { getTextureBundle, materialKeyFromKind } from '../lib/textures'
 import { CompareFinish } from './CompareFinish'
 import { DimensionControls } from './DimensionControls'
 import { MaterialSwatches } from './MaterialSwatches'
@@ -66,7 +65,7 @@ export function ConfigPanel({
         <Section title="Frame" complete detail={frame?.name}>
           <div className="grid grid-cols-2 gap-2">
             {frames.map((item) => {
-              const thumb = item.thumbnail || getTextureBundle(materialKeyFromKind(item.textureKind, item.id, item.sku, item.name)).thumbnail
+              const thumb = item.thumbnail
               const active = item.id === frameId
               return (
                 <button

@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf'
 import { formatCurrency, formatDimensions, stockLabel } from '../lib/format'
 import { captureViewportImage } from '../lib/snapshot'
 import {
@@ -11,19 +10,20 @@ import {
 
 export function SpecSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const state = useConfiguratorStore()
+  if (!open) return null
+
   const { configuredMaterial, frame, handle, product } = getSelectedEntities(state)
   const quote = getQuoteFromState(state)
   const payload = buildConfigurationPayload(state)
   const snapshot = captureViewportImage()
   const availability = stockLabel(getAvailability(state))
 
-  if (!open) return null
-
   const printSpec = () => {
     window.print()
   }
 
-  const downloadPdf = () => {
+  const downloadPdf = async () => {
+    const { jsPDF } = await import('jspdf')
     const doc = new jsPDF({ unit: 'pt', format: 'a4' })
     doc.setFillColor(12, 12, 13)
     doc.rect(0, 0, 595, 90, 'F')
@@ -83,7 +83,7 @@ export function SpecSheet({ open, onClose }: { open: boolean; onClose: () => voi
         id="spec-sheet"
         className="max-h-[92vh] w-full max-w-3xl overflow-auto rounded-2xl border border-white/10 bg-[#141416] p-6 text-[#f4efe6] shadow-2xl print:max-h-none print:border-0 print:bg-white print:text-black print:shadow-none"
       >
-        <div className="flex items-start justify-between gap-4 no-print">
+        <div className="no-print flex items-start justify-between gap-4">
           <div>
             <p className="text-[11px] tracking-[0.24em] text-[#c4a574] uppercase">DoorCraft</p>
             <h2 className="font-display mt-1 text-3xl">Specification Sheet</h2>
@@ -114,11 +114,11 @@ export function SpecSheet({ open, onClose }: { open: boolean; onClose: () => voi
             <SpecRow label="Configuration ID" value={payload.configurationId} />
           </dl>
         </div>
-        <div className="mt-6 flex gap-3 no-print">
+        <div className="no-print mt-6 flex gap-3">
           <button type="button" onClick={printSpec} className="btn-primary">
             Print
           </button>
-          <button type="button" onClick={downloadPdf} className="btn-ghost">
+          <button type="button" className="btn-ghost" onClick={() => void downloadPdf()}>
             Download PDF
           </button>
         </div>
