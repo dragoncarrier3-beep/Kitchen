@@ -8,10 +8,8 @@ import {
   useConfiguratorStore,
 } from '../store/configuratorStore'
 
-export function SpecSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const state = useConfiguratorStore()
-  if (!open) return null
-
+export function SpecSheet({ onClose }: { onClose: () => void }) {
+  const state = useConfiguratorStore.getState()
   const { configuredMaterial, frame, handle, product } = getSelectedEntities(state)
   const quote = getQuoteFromState(state)
   const payload = buildConfigurationPayload(state)

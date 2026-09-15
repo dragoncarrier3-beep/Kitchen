@@ -6,15 +6,6 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { ViewportChrome } from './ConfigPanel'
 import { WebGLFallback } from './WebGLFallback'
 
-function SceneFallback() {
-  return (
-    <mesh position={[0, 1.05, 0]}>
-      <boxGeometry args={[0.9, 2.1, 0.05]} />
-      <meshStandardMaterial color="#c4a06a" roughness={0.55} />
-    </mesh>
-  )
-}
-
 export function Viewport({ webgl }: { webgl: boolean }) {
   if (!webgl) {
     return (
@@ -48,9 +39,7 @@ export function Viewport({ webgl }: { webgl: boolean }) {
               gl.shadowMap.type = THREE.PCFSoftShadowMap
             }}
           >
-            <ErrorBoundary fallback={<SceneFallback />}>
-              <DoorScene />
-            </ErrorBoundary>
+            <DoorScene />
           </Canvas>
         </Suspense>
       </ErrorBoundary>

@@ -26,10 +26,10 @@ export default function App() {
     let cancelled = false
     const timeout = window.setTimeout(() => {
       if (!cancelled) setReady(true)
-    }, 4000)
+    }, 1800)
 
     initTextureLibrary((value) => {
-      if (!cancelled) setProgress(value)
+      if (!cancelled) setProgress(Math.max(0.06, value))
     })
       .then(() => {
         if (cancelled) return
@@ -80,8 +80,8 @@ export default function App() {
           <ConfigPanel onReset={requestReset} onErp={() => setErpOpen(true)} onSpec={() => setSpecOpen(true)} />
         </div>
       </div>
-      <ERPPayloadModal open={erpOpen} onClose={() => setErpOpen(false)} />
-      <SpecSheet open={specOpen} onClose={() => setSpecOpen(false)} />
+      {erpOpen ? <ERPPayloadModal onClose={() => setErpOpen(false)} /> : null}
+      {specOpen ? <SpecSheet onClose={() => setSpecOpen(false)} /> : null}
       <ResetDialog
         open={resetOpen}
         onCancel={() => setResetOpen(false)}

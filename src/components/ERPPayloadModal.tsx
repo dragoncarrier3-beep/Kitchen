@@ -2,11 +2,9 @@ import { getERPAdapter } from '../adapters'
 import { formatCurrency, formatDimensions } from '../lib/format'
 import { buildConfigurationPayload, useConfiguratorStore } from '../store/configuratorStore'
 
-export function ERPPayloadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const payload = useConfiguratorStore((state) => buildConfigurationPayload(state))
+export function ERPPayloadModal({ onClose }: { onClose: () => void }) {
+  const payload = buildConfigurationPayload(useConfiguratorStore.getState())
   const adapter = getERPAdapter()
-
-  if (!open) return null
 
   const rows = [
     ['Product SKU', payload.baseSku],

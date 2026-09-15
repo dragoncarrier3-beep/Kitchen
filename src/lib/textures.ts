@@ -21,8 +21,8 @@ type WoodSpec = {
   pore: number
 }
 
-const SIZE = 512
-const THUMB = 128
+const SIZE = 256
+const THUMB = 96
 
 function hash(x: number, y: number): number {
   const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453
@@ -104,10 +104,10 @@ function paintWood(size: number, spec: WoodSpec): { color: HTMLCanvasElement; ro
     for (let x = 0; x < size; x += 1) {
       const nx = x / size
       const ny = y / size
-      const warp = fbm(nx * 6, ny * 1.6, 4)
+      const warp = fbm(nx * 6, ny * 1.6, 3)
       const ring = Math.sin((nx * 18 + warp * 7) * Math.PI)
       const ringAbs = Math.abs(ring)
-      const grain = fbm(nx * 40, ny * 3.5, 3)
+      const grain = fbm(nx * 40, ny * 3.5, 2)
       const fine = noise(nx * 120, ny * 14)
       let t = ringAbs * 0.55 + grain * 0.35 + fine * 0.1
       t = Math.max(0, Math.min(1, t))
@@ -248,6 +248,8 @@ export async function initTextureLibrary(onProgress?: (value: number) => void): 
   }
 
   initPromise = (async () => {
+    onProgress?.(0.06)
+    await new Promise((resolve) => setTimeout(resolve, 0))
   const jobs: Array<[string, () => TextureBundle]> = [
     ['oak', () => {
       const w = paintWood(SIZE, WOOD.oak)
